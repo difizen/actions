@@ -50,7 +50,7 @@ runs:
 
     - name: Install Node dependencies
       shell: bash
-      run: pnpm install
+      run: pnpm install --frozen-lockfile
 
     # - name: Install Python dependencies
     #   shell: bash
