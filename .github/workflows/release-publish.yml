@@ -1,0 +1,56 @@
+name: 'Release: Publish'
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        description: 'Node version'
+        required: true
+      python-version:
+        type: string
+        description: 'Python version'
+        required: true
+    secrets:
+      NPM_TOKEN:
+        required: true
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # to create releases/tags
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          path: |
+            packages/*/es/**
+            packages/*/lib/**
+            packages/*/dist/**
+
+      - name: Authenticate with NPM
+        run: npm config set '//registry.npmjs.org/:_authToken' "${{ secrets.NPM_TOKEN }}"
+
+      - name: Publish
+        run: pnpm run ci:publish
+
+      - name: Create and push tags
+        # Use github-actions as user.name and user.email
+        run: |
+          git config user.name $(git --no-pager show -s --format='%an')
+          git config user.email $(git --no-pager show -s --format='%ae')
+          pnpm exec changeset tag
+          git push origin --follow-tags

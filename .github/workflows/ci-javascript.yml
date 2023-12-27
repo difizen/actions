@@ -1,0 +1,33 @@
+name: 'CI: JavaScript'
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        description: 'Node version'
+        required: true
+      python-version:
+        type: string
+        description: 'Python version'
+        required: true
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup environment
+        uses: difizen/actions/.github/actions/setup@main
+        with:
+          node-version: ${{ inputs.node-version }}
+          python-version: ${{ inputs.python-version }}
+
+      - name: Run checks
+        shell: bash
+        run: |
+          pnpm run ci:check

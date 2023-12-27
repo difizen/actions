@@ -1,0 +1,62 @@
+name: 'Release: Changesets'
+
+on:
+  workflow_call:
+    outputs:
+      should-release:
+        value: ${{ jobs.changesets.outputs.should-release }}
+
+jobs:
+  changesets:
+    name: Changesets
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # to push a new branch (changesets/action)
+      pull-requests: write # to create pull request (changesets/action)
+
+    outputs:
+      should-release: ${{ steps.changesets.outputs.hasChangesets == 'false' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          # fetch the full history for changesets to generate changelog
+          fetch-depth: 0
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          run_install: true
+
+      # Generate GitHub token for changesets/action
+      # Using difizen-bot
+      # This allows changesets/action to create a release PR using the bot's identity
+      # Token goes into env. See action for details
+      - name: Generate GitHub token
+        uses: wow-actions/use-app-token@v2
+        with:
+          app_id: ${{ secrets.BOT_APP_ID }}
+          private_key: ${{ secrets.BOT_PRIVATE_KEY }}
+
+      - name: Changeset pull request or forward to custom publish
+        # If there are changesets, this step will create a release PR
+        # If there isn't any changeset, this step will do nothing
+        # Instead, later steps will run CI and publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          # run changeset version to consume all changesets and bump versions
+          version: pnpm exec changeset version
+          # do nothing. publishing will happen in a separate job
+          # see ./release-publish.yml
+          publish: echo 'No changesets. Will publish packages'
+          # title of the release PR
+          title: 'chore: release'
+          # commit message for the release commits
+          commit: 'chore: stage changes for next release'
+        env:
+          # For changesets/action to create a release PR
+          # Comes from wow-actions/use-app-token
+          GITHUB_TOKEN: ${{ env.BOT_TOKEN }}
