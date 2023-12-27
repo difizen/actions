@@ -29,8 +29,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup environment
+        uses: difizen/actions/.github/actions/setup@main
+        with:
+          node-version: ${{ inputs.node-version }}
+          python-version: ${{ inputs.python-version }}
+
       - name: Build
-        run: pnpm run build
+        run: pnpm run ci:build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
