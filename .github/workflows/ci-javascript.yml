@@ -11,6 +11,9 @@ on:
         type: string
         description: 'Python version'
         required: true
+    secrets:
+      CODECOV_TOKEN:
+        required: false
 
 jobs:
   ci:
