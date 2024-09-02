@@ -16,7 +16,7 @@ runs:
     - name: Setup PNPM
       uses: pnpm/action-setup@v4
       with:
-        run_install: false
+        run_install: true
 
     - name: Setup Node ${{ inputs.node-version }}
       uses: actions/setup-node@v3
